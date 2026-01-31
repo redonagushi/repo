@@ -1,6 +1,7 @@
 package com.eazybytes.eazyschool.service;
 
-import com.eazybytes.eazyschool.constants.EazySchoolConstants;
+
+import com.eazybytes.eazyschool.repository.EazySchoolConstants;
 import com.eazybytes.eazyschool.model.Person;
 import com.eazybytes.eazyschool.model.Roles;
 import com.eazybytes.eazyschool.repository.PersonRepository;
@@ -33,4 +34,12 @@ public class PersonService {
         }
         return isSaved;
     }
+    public boolean createLecturer(Person person){
+        Roles role = rolesRepository.getByRoleName(EazySchoolConstants.LECTURER_ROLE);
+        person.setRoles(role);
+        person.setPwd(passwordEncoder.encode(person.getPwd()));
+        Person saved = personRepository.save(person);
+        return saved != null && saved.getPersonId() > 0;
+    }
+
 }

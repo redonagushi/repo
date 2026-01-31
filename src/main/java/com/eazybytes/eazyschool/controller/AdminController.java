@@ -4,15 +4,28 @@ import com.eazybytes.eazyschool.model.*;
 import com.eazybytes.eazyschool.repository.CoursesRepository;
 import com.eazybytes.eazyschool.repository.EazyClassRepository;
 import com.eazybytes.eazyschool.repository.PersonRepository;
+import com.eazybytes.eazyschool.service.PersonService;
+import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import com.eazybytes.eazyschool.model.LecturerForm;
+
 
 import jakarta.servlet.http.HttpSession;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,7 +33,8 @@ import java.util.Optional;
 @Controller
 @RequestMapping("admin")
 public class AdminController {
-
+    @Value("${eazyschool.upload.dir:uploads}")
+    private String uploadDir;
     @Autowired
     EazyClassRepository eazyClassRepository;
 
@@ -29,6 +43,9 @@ public class AdminController {
 
     @Autowired
     CoursesRepository coursesRepository;
+
+    @Autowired
+    private PersonService personService;
 
     @RequestMapping("/displayClasses")
     public ModelAndView displayClasses(Model model) {
@@ -105,22 +122,66 @@ public class AdminController {
     }
 
     @GetMapping("/displayCourses")
-    public ModelAndView displayCourses(Model model) {
-        //List<Courses> courses = coursesRepository.findByOrderByNameDesc();
-        List<Courses> courses = coursesRepository.findAll(Sort.by("name").descending());
-        ModelAndView modelAndView = new ModelAndView("courses_secure.html");
-        modelAndView.addObject("courses",courses);
-        modelAndView.addObject("course", new Courses());
-        return modelAndView;
+    public String displayCourses(Model model) {
+        model.addAttribute("courses", coursesRepository.findAll());
+        model.addAttribute("course", new Courses());
+        model.addAttribute("lecturers", personRepository.findByRoles_RoleName("LECTURER"));
+        return "courses_secure.html";
     }
 
+
     @PostMapping("/addNewCourse")
-    public ModelAndView addNewCourse(Model model, @ModelAttribute("course") Courses course) {
-        ModelAndView modelAndView = new ModelAndView();
-        coursesRepository.save(course);
-        modelAndView.setViewName("redirect:/admin/displayCourses");
-        return modelAndView;
+    public String addNewCourse(@Valid @ModelAttribute("course") Courses course,
+                               BindingResult br,
+                               @RequestParam(value = "image", required = false) MultipartFile image,
+                               RedirectAttributes ra) {
+
+        // ✅ nëse ka gabime validimi, kthehu te faqja e kurseve
+        if (br.hasErrors()) {
+            ra.addFlashAttribute("errorMessage", "Validation error!");
+            return "redirect:/admin/displayCourses";
+        }
+
+        try {
+            // ✅ ruaj imazhin nëse është zgjedhur
+            if (image != null && !image.isEmpty()) {
+
+                // kontroll bazik: vetëm image/*
+                if (image.getContentType() == null || !image.getContentType().startsWith("image/")) {
+                    ra.addFlashAttribute("errorMessage", "Only image files allowed!");
+                    return "redirect:/admin/displayCourses";
+                }
+
+                String original = image.getOriginalFilename() != null ? image.getOriginalFilename() : "";
+                String ext = "";
+                int dot = original.lastIndexOf('.');
+                if (dot >= 0) {
+                    ext = original.substring(dot);
+                }
+
+                String storedName = java.util.UUID.randomUUID() + ext;
+
+                Path dir = Paths.get(uploadDir, "course-images").toAbsolutePath().normalize();
+                Files.createDirectories(dir);
+
+                Path target = dir.resolve(storedName).normalize();
+                Files.copy(image.getInputStream(), target, java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+
+                course.setImageName(storedName);
+            }
+
+            coursesRepository.save(course);
+
+            ra.addFlashAttribute("successMessage", "Course added successfully!");
+            return "redirect:/admin/displayCourses";
+
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", "Error saving course: " + e.getMessage());
+            return "redirect:/admin/displayCourses";
+        }
     }
+
+
 
     @GetMapping("/viewStudents")
     public ModelAndView viewStudents(Model model, @RequestParam int id
@@ -170,5 +231,60 @@ public class AdminController {
                 ModelAndView("redirect:/admin/viewStudents?id="+courses.getCourseId());
         return modelAndView;
     }
+    @PostMapping("/assignLecturerToCourse")
+    public String assignLecturerToCourse(@RequestParam int courseId,
+                                         @RequestParam int lecturerId) {
+
+        Courses course = coursesRepository.findById(courseId)
+                .orElseThrow(() -> new RuntimeException("Course not found"));
+
+        Person lecturer = personRepository.findById(lecturerId)
+                .orElseThrow(() -> new RuntimeException("Lecturer not found"));
+
+        if (!"LECTURER".equalsIgnoreCase(lecturer.getRoles().getRoleName())) {
+            throw new RuntimeException("This user is not a LECTURER");
+        }
+
+        course.setLecturer(lecturer);
+        coursesRepository.save(course);
+
+        return "redirect:/admin/displayCourses";
+    }
+
+
+
+
+    @GetMapping("/displayLecturers")
+    public ModelAndView displayLecturers() {
+        ModelAndView mv = new ModelAndView("lecturers.html");
+        mv.addObject("lecturerForm", new LecturerForm());
+        return mv;
+    }
+
+    @PostMapping("/createLecturer")
+    public ModelAndView createLecturer(
+            @Valid @ModelAttribute("lecturerForm") LecturerForm form,
+            Errors errors) {
+
+        if (errors.hasErrors()) {
+            ModelAndView mv = new ModelAndView("lecturers.html");
+            mv.addObject("lecturerForm", form);
+            return mv;
+        }
+
+        Person p = new Person();
+        p.setName(form.getName());
+        p.setMobileNumber(form.getMobileNumber());
+        p.setEmail(form.getEmail());
+        p.setPwd(form.getPwd());
+
+        personService.createLecturer(p);
+
+        return new ModelAndView("redirect:/admin/displayLecturers");
+    }
+
+
+
+
 
 }

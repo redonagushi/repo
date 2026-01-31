@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>My Courses</title>
+</head>
+<body>
+
+<h2>My Courses</h2>
+
+<table border="1" th:if="${courses != null and !#lists.isEmpty(courses)}">
+    <thead>
+    <tr>
+        <th>Course</th>
+        <th>Fees</th>
+        <th>Students</th>
+        <th>Materials</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${courses}">
+        <td th:text="${c.name}"></td>
+        <td th:text="${c.fees}"></td>
+        <td>
+            <a th:href="@{/lecturer/course/{id}/students(id=${c.courseId})}">View Students</a>
+        </td>
+        <td>
+            <a th:href="@{/lecturer/course/{id}/materials(id=${c.courseId})}">View Materials</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p th:if="${courses == null or #lists.isEmpty(courses)}">No courses assigned.</p>
+
+</body>
+</html>

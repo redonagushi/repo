@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Lecturer</title>
+</head>
+<body>
+
+<h2>Create Lecturer</h2>
+
+<form th:action="@{/admin/createLecturer}"
+      th:object="${lecturerForm}"
+      method="post">
+
+    <input type="text" th:field="*{name}" placeholder="Name" required>
+    <input type="text" th:field="*{mobileNumber}" placeholder="Mobile" required>
+    <input type="email" th:field="*{email}" placeholder="Email" required>
+    <input type="email" th:field="*{confirmEmail}" placeholder="Confirm Email" required>
+
+    <input type="password" th:field="*{pwd}" placeholder="Password" required>
+    <input type="password" th:field="*{confirmPwd}" placeholder="Confirm Password" required>
+
+    <button type="submit">Create Lecturer</button>
+</form>
+
+</body>
+</html>

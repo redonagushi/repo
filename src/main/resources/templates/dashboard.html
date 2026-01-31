@@ -3,18 +3,17 @@ Author: W3layouts
 Author URL: http://w3layouts.com
 -->
 <!doctype html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org"
+<html lang="en"
+      xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Eazy School - Best Educational Institute for your Child</title>
-    <!-- Google fonts -->
+    <title>Eazy School - Dashboard</title>
+
     <link href="//fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- Template CSS Style link -->
-    <link rel="stylesheet" href="assets/css/style-starter.css">
+    <link rel="stylesheet" href="/assets/css/style-starter.css">
 </head>
 
 <body>
@@ -36,24 +35,28 @@ Author URL: http://w3layouts.com
     </div>
 </section>
 <!-- //inner banner -->
+<p th:text="${roles}"></p>
 
 <!-- Welcome block -->
 <section class="w3l-contact py-1" id="contact">
     <div class="container py-md-1 py-1">
         <div class="title-main text-center mx-auto mb-md-1 mb-1" style="max-width:500px;">
             <h3 class="title-style" th:text="${'Welcome - ' + username}"></h3>
-            <p class="" th:text="${'You logged in as - ' + roles}"></p>
-            <p class="" th:if="${!#strings.isEmpty(enrolledClass)}" th:text="${'Your assigned class is - [' + enrolledClass+']'}"></p>
+            <p th:text="${'You logged in as - ' + roles}"></p>
+            <p th:if="${enrolledClass != null and !#strings.isEmpty(enrolledClass)}"
+               th:text="${'Your assigned class is - [' + enrolledClass + ']'}"></p>
         </div>
-        
     </div>
 </section>
 <!-- //Welcome block -->
 
+<!-- Cards -->
 <div class="container py-md-5 py-4">
     <div class="section__content section__content--p30">
         <div class="container-fluid">
             <div class="row m-t-25">
+
+                <!-- Profile -->
                 <div class="col-sm-6 col-lg-3">
                     <a th:href="@{/displayProfile}">
                         <div class="overview-item overview-item--c4">
@@ -70,29 +73,33 @@ Author URL: http://w3layouts.com
                         </div>
                     </a>
                 </div>
-                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ROLE_ADMIN')">
+
+                <!-- ADMIN: Messages -->
+                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ADMIN')">
                     <a th:href="@{/displayMessages/page/1?sortField=name&sortDir=desc}">
-                    <div class="overview-item overview-item--c3">
-                        <div class="overview__inner">
-                            <div class="overview-box clearfix">
-                                <div class="icon">
-                                    <i class="fas fa-envelope-open-text"></i>
-                                </div>
-                                <div class="text">
-                                    <h2>Messages</h2>
+                        <div class="overview-item overview-item--c3">
+                            <div class="overview__inner">
+                                <div class="overview-box clearfix">
+                                    <div class="icon">
+                                        <i class="fas fa-envelope-open-text"></i>
+                                    </div>
+                                    <div class="text">
+                                        <h2>Messages</h2>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
                     </a>
                 </div>
-                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ROLE_ADMIN')">
+
+                <!-- ADMIN: Classes -->
+                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ADMIN')">
                     <a th:href="@{/admin/displayClasses}">
                         <div class="overview-item overview-item--c1">
                             <div class="overview__inner">
                                 <div class="overview-box clearfix">
                                     <div class="icon">
-                                        <i class="fas fa-envelope-open-text"></i>
+                                        <i class="fas fa-school"></i>
                                     </div>
                                     <div class="text">
                                         <h2>Classes</h2>
@@ -102,13 +109,15 @@ Author URL: http://w3layouts.com
                         </div>
                     </a>
                 </div>
-                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ROLE_ADMIN')">
+
+                <!-- ADMIN: Courses -->
+                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ADMIN')">
                     <a th:href="@{/admin/displayCourses}">
                         <div class="overview-item overview-item--c2">
                             <div class="overview__inner">
                                 <div class="overview-box clearfix">
                                     <div class="icon">
-                                        <i class="fas fa-envelope-open-text"></i>
+                                        <i class="fas fa-book"></i>
                                     </div>
                                     <div class="text">
                                         <h2>Courses</h2>
@@ -118,109 +127,134 @@ Author URL: http://w3layouts.com
                         </div>
                     </a>
                 </div>
-                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ROLE_STUDENT')">
+
+                <!-- STUDENT: My Courses -->
+                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('STUDENT')">
                     <a th:href="@{/student/displayCourses}">
                         <div class="overview-item overview-item--c3">
                             <div class="overview__inner">
                                 <div class="overview-box clearfix">
                                     <div class="icon">
-                                        <i class="fas fa-envelope-open-text"></i>
+                                        <i class="fas fa-book-reader"></i>
                                     </div>
                                     <div class="text">
-                                        <h2>Courses</h2>
+                                        <h2>My Courses</h2>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </a>
                 </div>
+
+                <!-- LECTURER: My Courses page (opsionale, nëse e përdor /lecturer/courses) -->
+                <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('LECTURER')">
+                    <a th:href="@{/lecturer/courses}">
+                        <div class="overview-item overview-item--c1">
+                            <div class="overview__inner">
+                                <div class="overview-box clearfix">
+                                    <div class="icon">
+                                        <i class="fas fa-chalkboard-teacher"></i>
+                                    </div>
+                                    <div class="text">
+                                        <h2>Lecturer</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
             </div>
         </div>
     </div>
+
+    <!-- LECTURER TABLE -->
+    <div class="mt-5" sec:authorize="hasRole('LECTURER')">
+        <h3>My Courses (Lecturer)</h3>
+
+        <div th:if="${lecturerCourses == null or #lists.isEmpty(lecturerCourses)}" class="alert alert-info">
+            No courses assigned yet.
+        </div>
+
+        <table th:if="${lecturerCourses != null and !#lists.isEmpty(lecturerCourses)}" class="table">
+            <thead>
+            <tr>
+                <th>Course</th>
+                <th>Manage</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${lecturerCourses}">
+                <td th:text="${c.name}"></td>
+                <td>
+                    <!-- ✅ këtu shkon te /lecturer/course/{id} (courseDetails) -->
+                    <a class="btn btn-sm btn-primary"
+                       th:href="@{/lecturer/course/{id}(id=${c.courseId})}">
+                        Open
+                    </a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
 </div>
 
 <!-- footer block -->
 <div th:replace="~{footer :: footer}">...</div>
 <!-- //footer block -->
 
-<!-- Js scripts -->
 <!-- move top -->
 <button onclick="topFunction()" id="movetop" title="Go to top">
     <span class="fas fa-level-up-alt" aria-hidden="true"></span>
 </button>
-<script>
-        // When the user scrolls down 20px from the top of the document, show the button
-        window.onscroll = function () {
-            scrollFunction()
-        };
 
-        function scrollFunction() {
-            if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
-                document.getElementById("movetop").style.display = "block";
-            } else {
-                document.getElementById("movetop").style.display = "none";
-            }
+<script>
+    window.onscroll = function () { scrollFunction() };
+
+    function scrollFunction() {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            document.getElementById("movetop").style.display = "block";
+        } else {
+            document.getElementById("movetop").style.display = "none";
         }
+    }
 
-        // When the user clicks on the button, scroll to the top of the document
-        function topFunction() {
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-        }
-    </script>
-<!-- //move top -->
+    function topFunction() {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    }
+</script>
 
-<!-- common jquery plugin -->
-<script src="assets/js/jquery-3.3.1.min.js"></script>
-<!-- //common jquery plugin -->
+<script src="/assets/js/jquery-3.3.1.min.js"></script>
+<script src="/assets/js/theme-change.js"></script>
 
-<!-- theme switch js (light and dark)-->
-<script src="assets/js/theme-change.js"></script>
-<!-- //theme switch js (light and dark)-->
-
-<!-- MENU-JS -->
 <script>
-        $(window).on("scroll", function () {
-            var scroll = $(window).scrollTop();
+    $(window).on("scroll", function () {
+        var scroll = $(window).scrollTop();
+        if (scroll >= 80) $("#site-header").addClass("nav-fixed");
+        else $("#site-header").removeClass("nav-fixed");
+    });
 
-            if (scroll >= 80) {
-                $("#site-header").addClass("nav-fixed");
-            } else {
-                $("#site-header").removeClass("nav-fixed");
-            }
-        });
+    $(".navbar-toggler").on("click", function () {
+        $("header").toggleClass("active");
+    });
 
-        //Main navigation Active Class Add Remove
-        $(".navbar-toggler").on("click", function () {
-            $("header").toggleClass("active");
+    $(document).on("ready", function () {
+        if ($(window).width() > 991) $("header").removeClass("active");
+        $(window).on("resize", function () {
+            if ($(window).width() > 991) $("header").removeClass("active");
         });
-        $(document).on("ready", function () {
-            if ($(window).width() > 991) {
-                $("header").removeClass("active");
-            }
-            $(window).on("resize", function () {
-                if ($(window).width() > 991) {
-                    $("header").removeClass("active");
-                }
-            });
-        });
-    </script>
-<!-- //MENU-JS -->
+    });
 
-<!-- disable body scroll which navbar is in active -->
-<script>
-        $(function () {
-            $('.navbar-toggler').click(function () {
-                $('body').toggleClass('noscroll');
-            })
-        });
-    </script>
-<!-- //disable body scroll which navbar is in active -->
+    $(function () {
+        $('.navbar-toggler').click(function () {
+            $('body').toggleClass('noscroll');
+        })
+    });
+</script>
 
-<!-- bootstrap -->
-<script src="assets/js/bootstrap.min.js"></script>
-<!-- //bootstrap -->
-<!-- //Js scripts -->
+<script src="/assets/js/bootstrap.min.js"></script>
+
 </body>
-
 </html>

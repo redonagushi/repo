@@ -1,5 +1,6 @@
 package com.eazybytes.eazyschool.config;
 
+import com.eazybytes.eazyschool.repository.EazySchoolConstants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -17,7 +18,9 @@ public class ProjectSecurityConfig {
         http.csrf((csrf) -> csrf.ignoringRequestMatchers("/saveMsg").ignoringRequestMatchers("/public/**")
                 .ignoringRequestMatchers("/api/**").ignoringRequestMatchers("/data-api/**"))
                 .authorizeHttpRequests((requests) -> requests.requestMatchers("/dashboard").authenticated()
-                    .requestMatchers("/displayMessages/**").hasRole("ADMIN")
+                        .requestMatchers("/course-materials/**").authenticated()
+
+                        .requestMatchers("/displayMessages/**").hasRole("ADMIN")
                     .requestMatchers("/closeMsg/**").hasRole("ADMIN")
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .requestMatchers("/api/**").authenticated()
@@ -33,6 +36,8 @@ public class ProjectSecurityConfig {
                     .requestMatchers("/about").permitAll()
                         //Foto
                         .requestMatchers("/uploads/**").permitAll()
+                        .requestMatchers("/lecturer/**").hasRole(EazySchoolConstants.LECTURER_ROLE)
+
 
                     .requestMatchers("/assets/**").permitAll()
                     .requestMatchers("/login").permitAll()

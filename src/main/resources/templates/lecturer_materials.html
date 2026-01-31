@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Course Materials</title>
+
+    <style>
+        body { font-family: Arial, sans-serif; padding: 24px; }
+        h2 { margin-bottom: 12px; }
+        .alert { padding: 10px 12px; margin: 10px 0; border-radius: 6px; }
+        .alert-success { background: #e8f7ee; border: 1px solid #a9e2bf; }
+        .alert-danger { background: #fdecec; border: 1px solid #f5b5b5; }
+        .box { border: 1px solid #ddd; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        label { display: inline-block; margin-bottom: 8px; font-weight: 600; }
+        input[type="file"] { margin-right: 10px; }
+        button, .btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-primary { background: #0d6efd; color: #fff; }
+        .btn-success { background: #198754; color: #fff; }
+        .btn-danger { background: #dc3545; color: #fff; }
+        .btn-secondary { background: #6c757d; color: #fff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f6f6f6; }
+        .actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .muted { color: #666; }
+        .top-row { display:flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    </style>
+</head>
+<body>
+
+<div class="top-row">
+    <h2 th:text="'Materials - ' + ${course.name}"></h2>
+
+    <a class="btn btn-secondary"
+       th:href="@{/lecturer/courses}">
+        Back to My Courses
+    </a>
+</div>
+
+<!-- ✅ SUCCESS / ERROR MESSAGES -->
+<div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+<div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+<!-- ================= UPLOAD FORM ================= -->
+<div class="box">
+    <form th:action="@{/lecturer/course/{id}/upload(id=${course.courseId})}"
+          method="post"
+          enctype="multipart/form-data">
+
+        <!-- CSRF -->
+        <input type="hidden"
+               th:name="${_csrf.parameterName}"
+               th:value="${_csrf.token}" />
+
+        <label>Upload PDF (max 10MB)</label><br/>
+
+        <input type="file" name="file" accept="application/pdf" required>
+        <button type="submit" class="btn btn-primary">Upload</button>
+
+        <p class="muted" style="margin-top:10px;">
+            Only PDF files are allowed. Max size 10MB. Max 8 materials per course.
+        </p>
+    </form>
+</div>
+
+<!-- ================= EMPTY STATE ================= -->
+<div th:if="${materials == null or #lists.isEmpty(materials)}" class="box">
+    <p class="muted">No materials uploaded yet.</p>
+</div>
+
+<!-- ================= LIST MATERIALS ================= -->
+<div th:if="${materials != null and !#lists.isEmpty(materials)}" class="box">
+    <table>
+        <thead>
+        <tr>
+            <th>File</th>
+            <th>Size</th>
+            <th>Uploaded</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${materials}">
+            <td th:text="${m.originalName}"></td>
+
+            <!-- size bytes -->
+            <td th:text="${m.fileSize} + ' bytes'"></td>
+
+            <!-- uploadedAt (nëse e ke në entity) -->
+            <td th:text="${m.uploadedAt}"></td>
+
+            <td>
+                <div class="actions">
+
+                    <!-- ✅ DOWNLOAD (me materialId) -->
+                    <a th:href="@{/course-materials/download/{id}(id=${m.materialId})}"
+                       class="btn btn-success btn-sm">
+                        Download
+                    </a>
+
+
+
+                    <!-- ✅ DELETE -->
+                    <form th:action="@{/lecturer/material/{id}/delete(id=${m.materialId})}"
+                          method="post"
+                          style="display:inline">
+
+                        <input type="hidden"
+                               th:name="${_csrf.parameterName}"
+                               th:value="${_csrf.token}" />
+
+                        <button type="submit"
+                                class="btn btn-danger"
+                                onclick="return confirm('Are you sure you want to delete this file?')">
+                            Delete
+                        </button>
+                    </form>
+
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+</body>
+</html>
