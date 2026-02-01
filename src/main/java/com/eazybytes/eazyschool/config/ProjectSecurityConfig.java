@@ -18,7 +18,8 @@ public class ProjectSecurityConfig {
         http.csrf((csrf) -> csrf.ignoringRequestMatchers("/saveMsg").ignoringRequestMatchers("/public/**")
                 .ignoringRequestMatchers("/api/**").ignoringRequestMatchers("/data-api/**"))
                 .authorizeHttpRequests((requests) -> requests.requestMatchers("/dashboard").authenticated()
-                        .requestMatchers("/course-materials/**").authenticated()
+                        .requestMatchers("/course-materials/**").hasAnyRole("STUDENT","LECTURER","ADMIN")
+
 
                         .requestMatchers("/displayMessages/**").hasRole("ADMIN")
                     .requestMatchers("/closeMsg/**").hasRole("ADMIN")
