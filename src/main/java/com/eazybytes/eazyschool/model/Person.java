@@ -14,10 +14,6 @@ import org.hibernate.annotations.GenericGenerator;
 
 import java.util.HashSet;
 import java.util.Set;
-//  'Admin',
-//  'admin@eazyschool.com',
-//  '1234567890',
-//  '$2a$10$xxxxxxxxxxxx', -- password i enkriptuar
 
 @Getter
 @Setter
@@ -34,66 +30,74 @@ import java.util.Set;
                 message = "Email addresses do not match!"
         )
 })
-public class Person extends BaseEntity{
+@Table(name = "person")
+public class Person extends BaseEntity {
 
     @Id
-    @GeneratedValue(strategy= GenerationType.AUTO,generator="native")
-    @GenericGenerator(name = "native",strategy = "native")
+    @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
+    @GenericGenerator(name = "native", strategy = "native")
     private int personId;
 
-    @NotBlank(message="Name must not be blank")
-    @Size(min=3, message="Name must be at least 3 characters long")
+    @NotBlank(message = "Name must not be blank")
+    @Size(min = 3, message = "Name must be at least 3 characters long")
     private String name;
 
-    @NotBlank(message="Mobile number must not be blank")
-    @Pattern(regexp="(^$|[0-9]{10})",message = "Mobile number must be 10 digits")
+    @NotBlank(message = "Mobile number must not be blank")
+    @Pattern(regexp = "(^$|[0-9]{10})", message = "Mobile number must be 10 digits")
+    @Column(name = "mobile_number")
     private String mobileNumber;
 
-    @NotBlank(message="Email must not be blank")
-    @Email(message = "Please provide a valid email address" )
+    @NotBlank(message = "Email must not be blank")
+    @Email(message = "Please provide a valid email address")
+    @Column(unique = true) // ✅ mos lejo dublikate
     private String email;
 
-    @NotBlank(message="Confirm Email must not be blank")
-    @Email(message = "Please provide a valid confirm email address" )
+    @NotBlank(message = "Confirm Email must not be blank")
+    @Email(message = "Please provide a valid confirm email address")
     @Transient
     @JsonIgnore
     private String confirmEmail;
 
-    @NotBlank(message="Password must not be blank")
-    @Size(min=5, message="Password must be at least 5 characters long")
+    @NotBlank(message = "Password must not be blank")
+    @Size(min = 5, message = "Password must be at least 5 characters long")
     @PasswordValidator
     @JsonIgnore
     private String pwd;
 
-    @NotBlank(message="Confirm Password must not be blank")
-    @Size(min=5, message="Confirm Password must be at least 5 characters long")
+    @NotBlank(message = "Confirm Password must not be blank")
+    @Size(min = 5, message = "Confirm Password must be at least 5 characters long")
     @Transient
     @JsonIgnore
     private String confirmPwd;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "role_id", referencedColumnName = "roleId", nullable = false)
+    /**
+     * ✅ FIX: referencedColumnName hiqet (ose duhet të jetë emër KOLONE në DB, jo emër field-i Java)
+     * Kështu lidhet automatikisht me PK të Roles.
+     *
+     * DB pritet të ketë:
+     * - person.role_id (FK)
+     * - roles.role_id (PK)
+     */
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "role_id", nullable = false)
     private Roles roles;
 
-
-    @OneToOne(fetch = FetchType.EAGER,cascade = CascadeType.ALL, targetEntity = Address.class)
-    @JoinColumn(name = "address_id", referencedColumnName = "addressId",nullable = true)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, targetEntity = Address.class)
+    @JoinColumn(name = "address_id", referencedColumnName = "addressId", nullable = true)
     private Address address;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "class_id", referencedColumnName = "classId", nullable = true)
     private EazyClass eazyClass;
 
-    // te Person.java
-    @Column(name="profile_image")
+    @Column(name = "profile_image")
     private String profileImage;
 
-
     @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
-    @JoinTable(name = "person_courses",
-            joinColumns = {
-                    @JoinColumn(name = "person_id", referencedColumnName = "personId")},
-            inverseJoinColumns = {
-                    @JoinColumn(name = "course_id", referencedColumnName = "courseId")})
+    @JoinTable(
+            name = "person_courses",
+            joinColumns = @JoinColumn(name = "person_id", referencedColumnName = "personId"),
+            inverseJoinColumns = @JoinColumn(name = "course_id", referencedColumnName = "courseId")
+    )
     private Set<Courses> courses = new HashSet<>();
 }
