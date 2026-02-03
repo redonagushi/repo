@@ -171,5 +171,11 @@ public class LecturerController {
         ra.addFlashAttribute("successMessage", "Material deleted.");
         return "redirect:/lecturer/course/" + course.getCourseId() + "/materials";
     }
+    @GetMapping("/course/{id}")
+    public String openCourse(@PathVariable int id, Authentication auth) {
+        // thjesht e ridrejton te materials (ose ku do ti)
+        return "redirect:/lecturer/course/" + id + "/materials";
+    }
+
 }
 

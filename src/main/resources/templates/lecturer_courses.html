@@ -1,37 +1,96 @@
-<!DOCTYPE html>
+<!--
+Author: W3layouts
+Author URL: http://w3layouts.com
+-->
+<!doctype html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>My Courses</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Courses - Lecturer</title>
+
+    <link href="//fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/style-starter.css">
 </head>
+
 <body>
 
-<h2>My Courses</h2>
+<!-- header -->
+<div th:replace="~{header :: header}">...</div>
+<!-- //header -->
 
-<table border="1" th:if="${courses != null and !#lists.isEmpty(courses)}">
-    <thead>
-    <tr>
-        <th>Course</th>
-        <th>Fees</th>
-        <th>Students</th>
-        <th>Materials</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="c : ${courses}">
-        <td th:text="${c.name}"></td>
-        <td th:text="${c.fees}"></td>
-        <td>
-            <a th:href="@{/lecturer/course/{id}/students(id=${c.courseId})}">View Students</a>
-        </td>
-        <td>
-            <a th:href="@{/lecturer/course/{id}/materials(id=${c.courseId})}">View Materials</a>
-        </td>
-    </tr>
-    </tbody>
-</table>
+<!-- inner banner -->
+<section class="inner-banner py-5">
+    <div class="w3l-breadcrumb py-lg-5">
+        <div class="container pt-4 pb-sm-4">
+            <h4 class="inner-text-title pt-5">My Courses (Lecturer)</h4>
+            <ul class="breadcrumbs-custom-path">
+                <li><a th:href="@{/home}">Home</a></li>
+                <li class="active"><i class="fas fa-angle-right"></i>My Courses</li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- //inner banner -->
 
-<p th:if="${courses == null or #lists.isEmpty(courses)}">No courses assigned.</p>
+<section class="w3l-contact py-5">
+    <div class="container py-md-5 py-4">
 
+        <div class="title-main text-center mx-auto mb-md-5 mb-4" style="max-width:600px;">
+            <h3 class="title-style">My Courses (Lecturer)</h3>
+        </div>
+
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+
+                <div class="table-responsive" th:if="${courses != null and !#lists.isEmpty(courses)}">
+                    <table class="table table-bordered table-striped align-middle">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Course</th>
+                            <th>Fees</th>
+                            <th style="width: 160px;">Students</th>
+                            <th style="width: 160px;">Materials</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="c : ${courses}">
+                            <td th:text="${c.name}">Course Name</td>
+                            <td th:text="${c.fees}">0</td>
+                            <td>
+                                <a th:href="@{/lecturer/course/{id}/students(id=${c.courseId})}"
+                                   class="btn btn-style btn-style-3">
+                                    View
+                                </a>
+                            </td>
+                            <td>
+                                <a th:href="@{/lecturer/course/{id}/materials(id=${c.courseId})}"
+                                   class="btn btn-style">
+                                    Open
+                                </a>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-info text-center"
+                     th:if="${courses == null or #lists.isEmpty(courses)}">
+                    No courses assigned.
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- footer -->
+<div th:replace="~{footer :: footer}">...</div>
+<!-- //footer -->
+
+<script src="/assets/js/jquery-3.3.1.min.js"></script>
+<script src="/assets/js/theme-change.js"></script>
+<script src="/assets/js/bootstrap.min.js"></script>
 </body>
 </html>

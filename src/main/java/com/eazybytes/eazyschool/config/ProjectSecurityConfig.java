@@ -1,6 +1,6 @@
 package com.eazybytes.eazyschool.config;
 
-import com.eazybytes.eazyschool.repository.EazySchoolConstants;
+import com.eazybytes.eazyschool.constants.EazySchoolConstants; // ✅ FIX: importi i saktë
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -15,50 +15,47 @@ public class ProjectSecurityConfig {
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 
-        http.csrf(csrf -> csrf
-                        .ignoringRequestMatchers("/saveMsg")
-                        .ignoringRequestMatchers("/public/**")
-                        .ignoringRequestMatchers("/api/**")
-                        .ignoringRequestMatchers("/data-api/**"))
+        http
+                .csrf(csrf -> csrf
+                        .ignoringRequestMatchers("/saveMsg", "/public/**", "/api/**", "/data-api/**")
+                )
                 .authorizeHttpRequests(requests -> requests
-                        .requestMatchers("/dashboard").authenticated()
-                        .requestMatchers("/course-materials/**").hasAnyRole("STUDENT", "LECTURER", "ADMIN")
 
-                        .requestMatchers("/displayMessages/**").hasRole("ADMIN")
-                        .requestMatchers("/closeMsg/**").hasRole("ADMIN")
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
-
-                        .requestMatchers("/api/**").authenticated()
-                        .requestMatchers("/data-api/**").authenticated()
-
-                        .requestMatchers("/displayProfile").authenticated()
-                        .requestMatchers("/updateProfile").authenticated()
-
-                        .requestMatchers("/student/**").hasRole("STUDENT")
+                        // ✅ 1) ROLE-based paths (vendosi lart)
+                        .requestMatchers("/admin/**").hasRole(EazySchoolConstants.ADMIN_ROLE)
                         .requestMatchers("/lecturer/**").hasRole(EazySchoolConstants.LECTURER_ROLE)
+                        .requestMatchers("/student/**").hasRole(EazySchoolConstants.STUDENT_ROLE)
 
-                        .requestMatchers("/", "/home").permitAll()
-                        .requestMatchers("/holidays/**").permitAll()
-                        .requestMatchers("/contact").permitAll()
-                        .requestMatchers("/saveMsg").permitAll()
-                        .requestMatchers("/courses").permitAll()
-                        .requestMatchers("/about").permitAll()
+                        // ✅ 2) Admin-only ekstra (nëse i ke këto rrugë jashtë /admin/**)
+                        .requestMatchers("/displayMessages/**").hasRole(EazySchoolConstants.ADMIN_ROLE)
+                        .requestMatchers("/closeMsg/**").hasRole(EazySchoolConstants.ADMIN_ROLE)
 
-                        // Foto statike
-                        .requestMatchers("/uploads/**").permitAll()
+                        // ✅ 3) Authenticated paths
+                        .requestMatchers("/dashboard").authenticated()
+                        .requestMatchers("/displayProfile", "/updateProfile").authenticated()
+                        .requestMatchers("/api/**", "/data-api/**").authenticated()
 
-                        .requestMatchers("/assets/**").permitAll()
-                        .requestMatchers("/login").permitAll()
-                        .requestMatchers("/logout").permitAll()
-                        .requestMatchers("/public/**").permitAll()
+                        // ✅ 4) shared for roles
+                        .requestMatchers("/course-materials/**")
+                        .hasAnyRole(EazySchoolConstants.STUDENT_ROLE,
+                                EazySchoolConstants.LECTURER_ROLE,
+                                EazySchoolConstants.ADMIN_ROLE)
+
+                        // ✅ 5) Public paths
+                        .requestMatchers("/", "/home", "/holidays/**", "/contact", "/saveMsg",
+                                "/courses", "/about", "/login", "/logout", "/public/**")
+                        .permitAll()
+
+                        // ✅ static
+                        .requestMatchers("/uploads/**", "/assets/**").permitAll()
+
+                        // ✅ çdo gjë tjetër kërkon login
+                        .anyRequest().authenticated()
                 )
                 .formLogin(login -> login
                         .loginPage("/login")
-
-                        // ✅ KJO E RREGULLON LOGIN-IN (vendos emrat sipas input-eve në login.html)
-                        .usernameParameter("email")   // zakonisht input name="email"
-                        .passwordParameter("pwd")     // zakonisht input name="pwd" (ose "password" nëse ashtu e ke)
-
+                        .usernameParameter("email")
+                        .passwordParameter("pwd")
                         .defaultSuccessUrl("/dashboard", true)
                         .failureUrl("/login?error=true")
                         .permitAll()
