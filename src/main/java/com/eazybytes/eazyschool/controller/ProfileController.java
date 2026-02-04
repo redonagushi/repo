@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,7 +48,8 @@ public class ProfileController {
         profile.setMobileNumber(person.getMobileNumber());
         profile.setEmail(person.getEmail());
 
-        if (person.getAddress() != null && person.getAddress().getAddressId() > 0) {
+        // ✅ mjafton null-check (s’ka nevojë addressId > 0)
+        if (person.getAddress() != null) {
             profile.setAddress1(person.getAddress().getAddress1());
             profile.setAddress2(person.getAddress().getAddress2());
             profile.setCity(person.getAddress().getCity());
@@ -64,38 +66,56 @@ public class ProfileController {
     @PostMapping(value = "/updateProfile", consumes = "multipart/form-data")
     public String updateProfile(
             @Valid @ModelAttribute("profile") Profile profile,
-            Errors errors,
+            org.springframework.validation.BindingResult br,
             @RequestParam(name = "profilePhoto", required = false) MultipartFile profilePhoto,
-            Authentication authentication) throws Exception {
+            Authentication authentication,
+            RedirectAttributes ra) throws Exception {
 
-        if (errors.hasErrors()) {
+        if (br.hasErrors()) {
             return "profile.html";
         }
 
         Person person = personRepository.readByEmail(authentication.getName());
-        if (person == null) {
+        if (person == null) return "redirect:/login?logout=true";
+
+        // -------- basic fields --------
+        person.setName(profile.getName());
+        person.setMobileNumber(profile.getMobileNumber());
+
+        // -------- email unique check --------
+        String newEmail = profile.getEmail();
+        String oldEmail = person.getEmail();
+        if (newEmail != null && !newEmail.equalsIgnoreCase(oldEmail)) {
+            if (personRepository.existsByEmail(newEmail)) {
+                br.rejectValue("email", "email.exists", "This email is already in use.");
+                return "profile.html";
+            }
+            person.setEmail(newEmail);
+            // ⚠️ rekomandim: pas ndryshimit të email-it, user-i duhet të bëjë login prap
+            ra.addFlashAttribute("successMessage", "Email updated. Please login again.");
+            personRepository.save(person);
             return "redirect:/login?logout=true";
         }
 
-        // update fushat
-        person.setName(profile.getName());
-        person.setEmail(profile.getEmail());
-        person.setMobileNumber(profile.getMobileNumber());
-
-        if (person.getAddress() == null || person.getAddress().getAddressId() <= 0) {
-            person.setAddress(new Address());
+        // -------- address: mos e fshi me null --------
+        Address addr = person.getAddress();
+        if (addr == null) {
+            addr = new Address();
+            person.setAddress(addr);
         }
-        person.getAddress().setAddress1(profile.getAddress1());
-        person.getAddress().setAddress2(profile.getAddress2());
-        person.getAddress().setCity(profile.getCity());
-        person.getAddress().setState(profile.getState());
-        person.getAddress().setZipCode(profile.getZipCode());
 
-        // upload foto
+        // vetëm nëse vjen vlerë jo-bosh, përditëso
+        if (notBlank(profile.getAddress1())) addr.setAddress1(profile.getAddress1());
+        if (profile.getAddress2() != null) addr.setAddress2(profile.getAddress2());
+        if (notBlank(profile.getCity())) addr.setCity(profile.getCity());
+        if (notBlank(profile.getState())) addr.setState(profile.getState());
+        if (notBlank(profile.getZipCode())) addr.setZipCode(profile.getZipCode());
+
+        // -------- photo upload --------
         if (profilePhoto != null && !profilePhoto.isEmpty()) {
             String contentType = profilePhoto.getContentType();
             if (contentType == null || !contentType.startsWith("image/")) {
-                errors.reject("photo.invalid", "Please upload an image file.");
+                br.reject("photo.invalid", "Please upload an image file.");
                 return "profile.html";
             }
 
@@ -103,7 +123,10 @@ public class ProfileController {
             Files.createDirectories(uploadPath);
 
             String original = profilePhoto.getOriginalFilename();
-            String ext = (original != null && original.contains(".")) ? original.substring(original.lastIndexOf(".")) : "";
+            String ext = (original != null && original.contains("."))
+                    ? original.substring(original.lastIndexOf("."))
+                    : "";
+
             String fileName = UUID.randomUUID() + ext;
 
             Files.copy(profilePhoto.getInputStream(),
@@ -114,6 +137,12 @@ public class ProfileController {
         }
 
         personRepository.save(person);
+        ra.addFlashAttribute("successMessage", "Profile updated successfully!");
         return "redirect:/displayProfile";
     }
+
+    private boolean notBlank(String s) {
+        return s != null && !s.trim().isEmpty();
+    }
+
 }

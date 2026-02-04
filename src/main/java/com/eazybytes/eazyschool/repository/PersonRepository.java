@@ -8,6 +8,7 @@ import java.util.List;
 
 @Repository
 public interface PersonRepository extends JpaRepository<Person, Integer> {
+    boolean existsByEmail(String email);
 
     Person readByEmail(String email);
     List<Person> findByRoles_RoleName(String roleName);

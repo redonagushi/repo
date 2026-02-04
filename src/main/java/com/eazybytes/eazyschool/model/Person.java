@@ -19,16 +19,8 @@ import java.util.Set;
 @Setter
 @Entity
 @FieldsValueMatch.List({
-        @FieldsValueMatch(
-                field = "pwd",
-                fieldMatch = "confirmPwd",
-                message = "Passwords do not match!"
-        ),
-        @FieldsValueMatch(
-                field = "email",
-                fieldMatch = "confirmEmail",
-                message = "Email addresses do not match!"
-        )
+        @FieldsValueMatch(field = "pwd", fieldMatch = "confirmPwd", message = "Passwords do not match!"),
+        @FieldsValueMatch(field = "email", fieldMatch = "confirmEmail", message = "Email addresses do not match!")
 })
 @Table(name = "person")
 public class Person extends BaseEntity {
@@ -36,6 +28,7 @@ public class Person extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
+    @Column(name = "person_id")
     private int personId;
 
     @NotBlank(message = "Name must not be blank")
@@ -49,11 +42,11 @@ public class Person extends BaseEntity {
 
     @NotBlank(message = "Email must not be blank")
     @Email(message = "Please provide a valid email address")
-    @Column(unique = true) // ✅ mos lejo dublikate
+    @Column(unique = true)
     private String email;
 
-    @NotBlank(message = "Confirm Email must not be blank")
-    @Email(message = "Please provide a valid confirm email address")
+
+
     @Transient
     @JsonIgnore
     private String confirmEmail;
@@ -64,40 +57,32 @@ public class Person extends BaseEntity {
     @JsonIgnore
     private String pwd;
 
-    @NotBlank(message = "Confirm Password must not be blank")
-    @Size(min = 5, message = "Confirm Password must be at least 5 characters long")
+
+
     @Transient
     @JsonIgnore
     private String confirmPwd;
 
-    /**
-     * ✅ FIX: referencedColumnName hiqet (ose duhet të jetë emër KOLONE në DB, jo emër field-i Java)
-     * Kështu lidhet automatikisht me PK të Roles.
-     *
-     * DB pritet të ketë:
-     * - person.role_id (FK)
-     * - roles.role_id (PK)
-     */
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "role_id", nullable = false)
     private Roles roles;
 
-    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL, targetEntity = Address.class)
-    @JoinColumn(name = "address_id", referencedColumnName = "addressId", nullable = true)
+    @OneToOne(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinColumn(name = "address_id")
     private Address address;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = true)
-    @JoinColumn(name = "class_id", referencedColumnName = "classId", nullable = true)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "class_id")
     private EazyClass eazyClass;
 
     @Column(name = "profile_image")
     private String profileImage;
 
-    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.PERSIST)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "person_courses",
-            joinColumns = @JoinColumn(name = "person_id", referencedColumnName = "personId"),
-            inverseJoinColumns = @JoinColumn(name = "course_id", referencedColumnName = "courseId")
+            joinColumns = @JoinColumn(name = "person_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
     )
     private Set<Courses> courses = new HashSet<>();
 }

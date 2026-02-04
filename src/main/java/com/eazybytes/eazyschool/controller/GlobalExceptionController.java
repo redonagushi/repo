@@ -22,6 +22,7 @@ public class GlobalExceptionController {
     * */
     @ExceptionHandler({Exception.class})
     public ModelAndView exceptionHandler(Exception exception){
+        log.error("Unhandled exception", exception);
         String errorMsg = null;
         ModelAndView errorPage = new ModelAndView();
         errorPage.setViewName("error");

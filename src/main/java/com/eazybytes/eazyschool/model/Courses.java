@@ -14,35 +14,36 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
+@Table(name = "courses")
 public class Courses extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO, generator = "native")
     @GenericGenerator(name = "native", strategy = "native")
+    @Column(name = "course_id")
     private int courseId;
 
+    @Column(name = "name")
     private String name;
+
+    @Column(name = "fees")
     private String fees;
 
-    // ✅ NEW: përshkrimi (max 600)
     @Size(max = 600, message = "Description max 600 characters")
-    @Column(length = 600)
+    @Column(name = "description", length = 600)
     private String description;
 
-    // ✅ NEW: emri i file-it të imazhit të ruajtur
     @Column(name = "image_name")
     private String imageName;
 
-    // STUDENTËT e regjistruar
     @ManyToMany(mappedBy = "courses", fetch = FetchType.EAGER)
     private Set<Person> persons = new HashSet<>();
 
-    // ✅ Pedagogu përgjegjës për kursin
+    // ✅ FIX: mos përdor referencedColumnName="personId"
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "lecturer_id", referencedColumnName = "personId")
+    @JoinColumn(name = "lecturer_id", nullable = true)
     private Person lecturer;
 
-    // ✅ Materialet e kursit
     @OneToMany(mappedBy = "course", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CourseMaterial> materials = new ArrayList<>();
 }
