@@ -35,7 +35,12 @@ public class EazySchoolNonProdUsernamePwdAuthenticationProvider
         String email = authentication.getName();
         String pwd = authentication.getCredentials().toString();
         Person person = personRepository.readByEmail(email);
-        if(null != person && person.getPersonId()>0){
+        if(null != person && person.getPersonId()>0
+
+            /* && passwordEncoder.matches(pwd, person.getPwd()
+            * to be added to enable password verification. Having trouble
+            * with authenticating admin so will remain disabled*/){
+
             return new UsernamePasswordAuthenticationToken(
                     email, null, getGrantedAuthorities(person.getRoles()));
         }else{
