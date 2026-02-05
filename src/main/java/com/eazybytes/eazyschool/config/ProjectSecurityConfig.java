@@ -33,6 +33,7 @@ public class ProjectSecurityConfig {
                     .requestMatchers("/contact").permitAll()
                     .requestMatchers("/saveMsg").permitAll()
                     .requestMatchers("/courses").permitAll()
+                    .requestMatchers("/courses/**").permitAll()
                     .requestMatchers("/about").permitAll()
                         //Foto
                         .requestMatchers("/uploads/**").permitAll()

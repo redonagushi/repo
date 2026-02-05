@@ -25,6 +25,9 @@ public class PersonService {
     public boolean createNewPerson(Person person){
         boolean isSaved = false;
         Roles role = rolesRepository.getByRoleName(EazySchoolConstants.STUDENT_ROLE);
+        if (role == null) {
+            throw new RuntimeException("Role not found: " + EazySchoolConstants.STUDENT_ROLE);
+        }
         person.setRoles(role);
         person.setPwd(passwordEncoder.encode(person.getPwd()));
         person = personRepository.save(person);
@@ -36,6 +39,9 @@ public class PersonService {
     }
     public boolean createLecturer(Person person){
         Roles role = rolesRepository.getByRoleName(EazySchoolConstants.LECTURER_ROLE);
+        if (role == null) {
+            throw new RuntimeException("Role not found: " + EazySchoolConstants.LECTURER_ROLE);
+        }
         person.setRoles(role);
         person.setPwd(passwordEncoder.encode(person.getPwd()));
         Person saved = personRepository.save(person);

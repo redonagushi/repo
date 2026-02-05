@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${course.name} + ' - Eazy School'">Course Detail</title>
+    <link href="//fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/style-starter.css">
+    <style>
+        .star-rating { display:flex; flex-direction:row-reverse; justify-content:flex-end; gap:2px; }
+        .star-rating input { display:none; }
+        .star-rating label { font-size:1.8rem; color:#ccc; cursor:pointer; transition:color 0.15s; }
+        .star-rating label:hover,
+        .star-rating label:hover ~ label,
+        .star-rating input:checked ~ label { color:#f5a623; }
+        .stars-display { color:#f5a623; font-size:1.5rem; }
+    </style>
+</head>
+
+<body>
+
+<div th:replace="~{header :: header}">...</div>
+
+<section class="inner-banner py-5">
+    <div class="w3l-breadcrumb py-lg-5">
+        <div class="container pt-4 pb-sm-4">
+            <h4 class="inner-text-title pt-5" th:text="${course.name}">Course</h4>
+            <ul class="breadcrumbs-custom-path">
+                <li><a th:href="@{/home}">Home</a></li>
+                <li><a th:href="@{/courses}">Courses</a></li>
+                <li class="active"><i class="fas fa-angle-right"></i><span th:text="${course.name}"></span></li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="w3l-contact py-5">
+    <div class="container py-md-5 py-4">
+
+        <!-- Flash messages -->
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+        <div class="row">
+            <!-- Course Info -->
+            <div class="col-lg-8">
+                <div class="mb-4" th:if="${course.imageName != null}">
+                    <img th:src="@{/uploads/course-images/{img}(img=${course.imageName})}"
+                         alt="" class="img-fluid" style="max-height:400px;width:100%;object-fit:cover;border-radius:8px;" />
+                </div>
+
+                <h3 th:text="${course.name}">Course Name</h3>
+
+                <p class="mt-2" th:if="${course.lecturer != null}">
+                    <strong>Lecturer:</strong> <span th:text="${course.lecturer.name}"></span>
+                </p>
+
+                <p class="mt-2" th:if="${course.fees != null}">
+                    <strong>Fees:</strong> <span th:text="${course.fees}"></span>
+                </p>
+
+                <p class="mt-2">
+                    <strong>Rating:</strong>
+                    <span th:if="${avgRating != null}" th:text="${#numbers.formatDecimal(avgRating, 1, 1)} + ' / 5'"></span>
+                    <span th:if="${avgRating == null}">No ratings yet</span>
+                    &nbsp;|&nbsp;
+                    <strong>Materials:</strong> <span th:text="${materialsCount}">0</span> lessons
+                </p>
+
+                <div class="mt-4">
+                    <h5>Description</h5>
+                    <p th:text="${course.description}" th:if="${course.description != null}">No description available.</p>
+                    <p th:if="${course.description == null}">No description available.</p>
+                </div>
+            </div>
+
+            <!-- Actions Sidebar -->
+            <div class="col-lg-4">
+                <div class="card p-4" style="border:1px solid #ddd;border-radius:8px;">
+
+                    <!-- Not logged in -->
+                    <div th:if="${!loggedIn}">
+                        <p>Please <a th:href="@{/login}">login</a> to request enrollment.</p>
+                    </div>
+
+                    <!-- Logged in but not a student -->
+                    <div th:if="${loggedIn and !isStudent}">
+                        <p>Enrollment is available for students only.</p>
+                    </div>
+
+                    <!-- Student: not enrolled -->
+                    <div th:if="${isStudent and !enrolled}">
+                        <div th:if="${!hasEnrollRequest}">
+                            <form th:action="@{/student/courses/{id}/enroll(id=${course.courseId})}" method="post">
+                                <button type="submit" class="btn btn-primary btn-block w-100">Request Enrollment</button>
+                            </form>
+                        </div>
+                        <div th:if="${hasEnrollRequest}">
+                            <button class="btn btn-secondary btn-block w-100" disabled>Enrollment Request Sent</button>
+                        </div>
+                    </div>
+
+                    <!-- Student: enrolled -->
+                    <div th:if="${isStudent and enrolled}">
+                        <div class="alert alert-success mb-3">You are enrolled in this course.</div>
+
+                        <!-- Materials -->
+                        <h5>Course Materials</h5>
+                        <div th:if="${materials != null and !#lists.isEmpty(materials)}">
+                            <ul class="list-unstyled">
+                                <li th:each="mat : ${materials}" class="mb-2">
+                                    <a th:href="@{/student/course/{cid}/materials(cid=${course.courseId})}"
+                                       th:text="${mat.originalName}">file.pdf</a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div th:if="${materials == null or #lists.isEmpty(materials)}">
+                            <p class="text-muted">No materials uploaded yet.</p>
+                        </div>
+
+                        <hr/>
+
+                        <!-- Unenroll -->
+                        <div th:if="${!hasUnenrollRequest}">
+                            <form th:action="@{/student/courses/{id}/unenroll(id=${course.courseId})}" method="post">
+                                <button type="submit" class="btn btn-outline-danger btn-block w-100">Request Unenrollment</button>
+                            </form>
+                        </div>
+                        <div th:if="${hasUnenrollRequest}">
+                            <button class="btn btn-secondary btn-block w-100" disabled>Unenrollment Request Sent</button>
+                        </div>
+
+                        <hr/>
+
+                        <!-- Rating -->
+                        <h5>Rate this Course</h5>
+                        <div th:if="${!hasRated}">
+                            <form th:action="@{/student/courses/{id}/rate(id=${course.courseId})}" method="post">
+                                <div class="star-rating mb-2">
+                                    <input type="radio" name="rating" value="5" id="star5"/>
+                                    <label for="star5">&#9733;</label>
+                                    <input type="radio" name="rating" value="4" id="star4"/>
+                                    <label for="star4">&#9733;</label>
+                                    <input type="radio" name="rating" value="3" id="star3"/>
+                                    <label for="star3">&#9733;</label>
+                                    <input type="radio" name="rating" value="2" id="star2"/>
+                                    <label for="star2">&#9733;</label>
+                                    <input type="radio" name="rating" value="1" id="star1"/>
+                                    <label for="star1">&#9733;</label>
+                                </div>
+                                <button type="submit" class="btn btn-sm btn-primary">Submit Rating</button>
+                            </form>
+                        </div>
+                        <div th:if="${hasRated}">
+                            <p>Your rating:
+                                <span class="stars-display">
+                                    <span th:each="i : ${#numbers.sequence(1,5)}"
+                                          th:text="${i <= studentRating.rating} ? '&#9733;' : '&#9734;'"></span>
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<div th:replace="~{footer :: footer}">...</div>
+
+<button onclick="topFunction()" id="movetop" title="Go to top">
+    <span class="fas fa-level-up-alt" aria-hidden="true"></span>
+</button>
+<script>
+    window.onscroll = function () { scrollFunction() };
+    function scrollFunction() {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            document.getElementById("movetop").style.display = "block";
+        } else { document.getElementById("movetop").style.display = "none"; }
+    }
+    function topFunction() { document.body.scrollTop = 0; document.documentElement.scrollTop = 0; }
+</script>
+<script src="/assets/js/jquery-3.3.1.min.js"></script>
+<script src="/assets/js/theme-change.js"></script>
+<script>
+    $(window).on("scroll", function () {
+        var scroll = $(window).scrollTop();
+        if (scroll >= 80) $("#site-header").addClass("nav-fixed");
+        else $("#site-header").removeClass("nav-fixed");
+    });
+    $(".navbar-toggler").on("click", function () { $("header").toggleClass("active"); });
+    $(document).on("ready", function () {
+        if ($(window).width() > 991) $("header").removeClass("active");
+        $(window).on("resize", function () { if ($(window).width() > 991) $("header").removeClass("active"); });
+    });
+    $(function () { $('.navbar-toggler').click(function () { $('body').toggleClass('noscroll'); }) });
+</script>
+<script src="/assets/js/bootstrap.min.js"></script>
+
+</body>
+</html>

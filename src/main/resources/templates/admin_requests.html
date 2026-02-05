@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Eazy School - Course Requests</title>
+    <link href="//fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/assets/css/style-starter.css">
+</head>
+
+<body>
+
+<div th:replace="~{header :: header}">...</div>
+
+<section class="inner-banner py-5">
+    <div class="w3l-breadcrumb py-lg-5">
+        <div class="container pt-4 pb-sm-4">
+            <h4 class="inner-text-title pt-5">Course Requests</h4>
+            <ul class="breadcrumbs-custom-path">
+                <li><a th:href="@{/home}">Home</a></li>
+                <li><a th:href="@{/dashboard}">Dashboard</a></li>
+                <li class="active"><i class="fas fa-angle-right"></i>Requests</li>
+            </ul>
+        </div>
+    </div>
+</section>
+
+<section class="w3l-contact py-5">
+    <div class="container py-md-5 py-4">
+
+        <div th:if="${successMessage}" class="alert alert-success" th:text="${successMessage}"></div>
+        <div th:if="${errorMessage}" class="alert alert-danger" th:text="${errorMessage}"></div>
+
+        <div th:if="${#lists.isEmpty(requests)}" class="alert alert-info">
+            No requests found.
+        </div>
+
+        <table th:if="${!#lists.isEmpty(requests)}" class="table table-bordered">
+            <thead>
+            <tr>
+                <th>Student Name</th>
+                <th>Student Email</th>
+                <th>Course</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Created</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="req : ${requests}">
+                <td th:text="${req.student.name}"></td>
+                <td th:text="${req.student.email}"></td>
+                <td th:text="${req.course.name}"></td>
+                <td>
+                    <span th:text="${req.type}"></span>
+                </td>
+                <td>
+                    <span th:if="${req.status.name() == 'PENDING'}" class="badge" style="background-color:#ffc107;color:#000;">PENDING</span>
+                    <span th:if="${req.status.name() == 'APPROVED'}" class="badge" style="background-color:#28a745;color:#fff;">APPROVED</span>
+                    <span th:if="${req.status.name() == 'REJECTED'}" class="badge" style="background-color:#dc3545;color:#fff;">REJECTED</span>
+                </td>
+                <td th:text="${#temporals.format(req.createdAt, 'yyyy-MM-dd HH:mm')}"></td>
+                <td>
+                    <div th:if="${req.status.name() == 'PENDING'}">
+                        <form th:action="@{/admin/requests/{id}/approve(id=${req.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-success">Approve</button>
+                        </form>
+                        <form th:action="@{/admin/requests/{id}/reject(id=${req.id})}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-sm btn-danger">Reject</button>
+                        </form>
+                    </div>
+                    <div th:if="${req.status.name() != 'PENDING'}">
+                        <span class="text-muted" th:text="${req.status}"></span>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<div th:replace="~{footer :: footer}">...</div>
+
+<button onclick="topFunction()" id="movetop" title="Go to top">
+    <span class="fas fa-level-up-alt" aria-hidden="true"></span>
+</button>
+<script>
+    window.onscroll = function () { scrollFunction() };
+    function scrollFunction() {
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            document.getElementById("movetop").style.display = "block";
+        } else { document.getElementById("movetop").style.display = "none"; }
+    }
+    function topFunction() { document.body.scrollTop = 0; document.documentElement.scrollTop = 0; }
+</script>
+<script src="/assets/js/jquery-3.3.1.min.js"></script>
+<script src="/assets/js/theme-change.js"></script>
+<script>
+    $(window).on("scroll", function () {
+        var scroll = $(window).scrollTop();
+        if (scroll >= 80) $("#site-header").addClass("nav-fixed");
+        else $("#site-header").removeClass("nav-fixed");
+    });
+    $(".navbar-toggler").on("click", function () { $("header").toggleClass("active"); });
+    $(document).on("ready", function () {
+        if ($(window).width() > 991) $("header").removeClass("active");
+        $(window).on("resize", function () { if ($(window).width() > 991) $("header").removeClass("active"); });
+    });
+    $(function () { $('.navbar-toggler').click(function () { $('body').toggleClass('noscroll'); }) });
+</script>
+<script src="/assets/js/bootstrap.min.js"></script>
+
+</body>
+</html>

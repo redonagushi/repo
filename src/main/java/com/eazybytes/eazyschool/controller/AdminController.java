@@ -4,6 +4,7 @@ import com.eazybytes.eazyschool.model.*;
 import com.eazybytes.eazyschool.repository.CoursesRepository;
 import com.eazybytes.eazyschool.repository.EazyClassRepository;
 import com.eazybytes.eazyschool.repository.PersonRepository;
+import com.eazybytes.eazyschool.service.CourseRequestService;
 import com.eazybytes.eazyschool.service.PersonService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,9 @@ public class AdminController {
 
     @Autowired
     private PersonService personService;
+
+    @Autowired
+    private CourseRequestService courseRequestService;
 
     @RequestMapping("/displayClasses")
     public ModelAndView displayClasses(Model model) {
@@ -129,24 +133,20 @@ public class AdminController {
         return "courses_secure.html";
     }
 
-
     @PostMapping("/addNewCourse")
     public String addNewCourse(@Valid @ModelAttribute("course") Courses course,
                                BindingResult br,
                                @RequestParam(value = "image", required = false) MultipartFile image,
                                RedirectAttributes ra) {
 
-        // ✅ nëse ka gabime validimi, kthehu te faqja e kurseve
         if (br.hasErrors()) {
             ra.addFlashAttribute("errorMessage", "Validation error!");
             return "redirect:/admin/displayCourses";
         }
 
         try {
-            // ✅ ruaj imazhin nëse është zgjedhur
             if (image != null && !image.isEmpty()) {
 
-                // kontroll bazik: vetëm image/*
                 if (image.getContentType() == null || !image.getContentType().startsWith("image/")) {
                     ra.addFlashAttribute("errorMessage", "Only image files allowed!");
                     return "redirect:/admin/displayCourses";
@@ -180,8 +180,6 @@ public class AdminController {
             return "redirect:/admin/displayCourses";
         }
     }
-
-
 
     @GetMapping("/viewStudents")
     public ModelAndView viewStudents(Model model, @RequestParam int id
@@ -231,6 +229,7 @@ public class AdminController {
                 ModelAndView("redirect:/admin/viewStudents?id="+courses.getCourseId());
         return modelAndView;
     }
+
     @PostMapping("/assignLecturerToCourse")
     public String assignLecturerToCourse(@RequestParam int courseId,
                                          @RequestParam int lecturerId) {
@@ -250,9 +249,6 @@ public class AdminController {
 
         return "redirect:/admin/displayCourses";
     }
-
-
-
 
     @GetMapping("/displayLecturers")
     public ModelAndView displayLecturers() {
@@ -283,8 +279,33 @@ public class AdminController {
         return new ModelAndView("redirect:/admin/displayLecturers");
     }
 
+    @GetMapping("/requests")
+    public String displayRequests(Model model) {
+        model.addAttribute("requests", courseRequestService.getAllRequests());
+        return "admin_requests.html";
+    }
 
+    @PostMapping("/requests/{id}/approve")
+    public String approveRequest(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
+        Person admin = (Person) session.getAttribute("loggedInPerson");
+        try {
+            courseRequestService.approveRequest(id, admin);
+            ra.addFlashAttribute("successMessage", "Request approved");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/requests";
+    }
 
-
-
+    @PostMapping("/requests/{id}/reject")
+    public String rejectRequest(@PathVariable Long id, HttpSession session, RedirectAttributes ra) {
+        Person admin = (Person) session.getAttribute("loggedInPerson");
+        try {
+            courseRequestService.rejectRequest(id, admin);
+            ra.addFlashAttribute("successMessage", "Request rejected");
+        } catch (Exception e) {
+            ra.addFlashAttribute("errorMessage", e.getMessage());
+        }
+        return "redirect:/admin/requests";
+    }
 }
