@@ -35,7 +35,7 @@ public class CourseMaterialDownloadController {
                 .orElseThrow(() -> new RuntimeException("Material not found"));
 
         // 2️⃣ path real i file-it
-        Path filePath = Paths.get(uploadDir, "course-materials")
+        Path filePath = Paths.get(uploadDir, "materials", String.valueOf(m.getCourse().getCourseId()))
                 .toAbsolutePath()
                 .normalize()
                 .resolve(m.getStoredName())

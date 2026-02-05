@@ -76,7 +76,7 @@ Author URL: http://w3layouts.com
 
                 <!-- ADMIN: Messages -->
                 <div class="col-sm-6 col-lg-3" sec:authorize="hasRole('ADMIN')">
-                    <a th:href="@{/displayMessages/page/1?sortField=name&sortDir=desc}">
+                    <a th:href="@{/displayMessages/page/1?sortField=name}">
                         <div class="overview-item overview-item--c3">
                             <div class="overview__inner">
                                 <div class="overview-box clearfix">
@@ -223,9 +223,9 @@ Author URL: http://w3layouts.com
             <tr th:each="c : ${lecturerCourses}">
                 <td th:text="${c.name}"></td>
                 <td>
-                    <!-- ✅ këtu shkon te /lecturer/course/{id} (courseDetails) -->
+                    <!-- ✅ këtu shkon te /lecturer/course/{id}/materials -->
                     <a class="btn btn-sm btn-primary"
-                       th:href="@{/lecturer/course/{id}(id=${c.courseId})}">
+                       th:href="@{/lecturer/course/{id}/materials(id=${c.courseId})}">
                         Open
                     </a>
                 </td>
